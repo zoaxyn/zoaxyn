@@ -1,0 +1,304 @@
+/*
+Original Design by: Blogthor @ www<electronics-project-hub>com
+*/
+
+//1602 without I2C
+//#include <LiquidCrystal.h>
+//const int rs = 12;
+//const int en = 11;
+//const int db4 = 5;
+//const int db5 = 4;
+//const int db6 = 3;
+//const int db7 = 2;
+//LiquidCrystal lcd(rs, en, db4, db5, db6, db7);
+
+//1602 with I2C 
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);  //change address
+
+// Define color sensor pins
+#define S0 4
+#define S1 5
+#define S2 6
+#define S3 7
+#define sensorOut 8
+
+//Variables
+int h = 12;  			    //initial sets hours
+int m = 0;				    //initial sets minutes
+int s = 0;				    //initial sets seconds
+int flag = 0;   		  //Set AM of PM
+long prevMillis = 0;	//placeholder for millis
+long interval = 1000; //clock interval
+const int spkr = 2;   //Speaker Pin
+int on = 0;
+int off = 1;
+
+int redMin = 40; // Red minimum value
+int redMax = 179; // Red maximum value
+int greenMin = 52; // Green minimum value
+int greenMax = 118; // Green maximum value
+int blueMin = 53; // Blue minimum value
+int blueMax = 206; // Blue maximum value
+
+// Variables for Color Pulse Width Measurements
+int redPW = 0;
+int greenPW = 0;
+int bluePW = 0;
+
+// Variables for final Color values
+int redValue;
+int greenValue;
+int blueValue;
+
+int getRedPW() {
+	// Set sensor to read Red only
+	digitalWrite(S2,LOW);
+	digitalWrite(S3,LOW);
+	// Define integer to represent Pulse Width
+	int PW;
+	// Read the output Pulse Width
+	PW = pulseIn(sensorOut, LOW);
+	// Return the value
+	return PW;
+}
+
+int getGreenPW() {
+	// Set sensor to read Red only
+	digitalWrite(S2,LOW);
+	digitalWrite(S3,LOW);
+	// Define integer to represent Pulse Width
+	int PW;
+	// Read the output Pulse Width
+	PW = pulseIn(sensorOut, LOW);
+	// Return the value
+	return PW;
+}
+
+int getBluePW() {
+	// Set sensor to read Red only
+	digitalWrite(S2,LOW);
+	digitalWrite(S3,LOW);
+	// Define integer to represent Pulse Width
+	int PW;
+	// Read the output Pulse Width
+	PW = pulseIn(sensorOut, LOW);
+	// Return the value
+	return PW;
+}
+
+int mode = 0; 			  //Select a mode
+const int btnPin1 = 3;	//Pin for hour button
+const int btnPin2 = 9;	//Pin for minute button
+int btn1 = 1;		  	//Checks the state of hour button
+int btn2 = 1;		  	//Checks the state of minute button
+
+void setup()
+{
+  //For I2C Only
+  lcd.init();
+  lcd.backlight();
+  
+  Serial.begin(9600);
+  lcd.begin(16, 2);
+  pinMode(btnPin1, INPUT);
+  pinMode(btnPin2, INPUT);
+  
+  pinMode(S0, OUTPUT);
+	pinMode(S1, OUTPUT);
+	pinMode(S2, OUTPUT);
+	pinMode(S3, OUTPUT);
+
+	// Set Sensor output as input
+	pinMode(sensorOut, INPUT);
+
+	// Set Frequency scaling to 20%
+	digitalWrite(S0,HIGH);
+	digitalWrite(S1,LOW);
+
+	// Setup Serial Monitor
+	Serial.begin(9600);
+}
+
+void loop()
+{
+  //Saves millis to currentMillis interval
+  unsigned long currentMillis = millis();
+  
+  //Check is buttons are being pressed
+  btn1 = digitalRead(btnPin1);
+  btn2 = digitalRead(btnPin2);
+  
+  //Clock logic
+  if(currentMillis - prevMillis >= interval) 
+  {
+    s = s + 1;  //increase "s" by 1 every second
+    
+    if (s >= 60) //if seconds = 60, reset, set minutes to 1
+    {
+      s = 0;
+      m = m + 1;
+    }
+    
+    if (m >= 60) //if minutes = 60, reset, set hours to 1
+  	{
+  	  m = 0;
+  	  h = h + 1;
+  	  flag = flag + 1;
+  	}
+  	
+  	if (h >= 13) //if hours = 13, reset to 1
+  	{
+  	  h = 1;
+  	}
+  
+    prevMillis = currentMillis;  //Maintain millis timing interval
+  }
+  
+    if(mode == 0)
+    {
+    lcd.setCursor(0, 0);
+  	lcd.print("TIME:" );
+  	lcd.print(h);
+  	lcd.print(":");
+  	lcd.print(m);
+  	lcd.print(":");
+  	lcd.print(s);
+    
+  	//AM/PM Display
+    if (flag < 12) lcd.print(" AM");
+  	if (flag == 12) lcd.print(" PM");
+  	if (flag > 12) lcd.print(" PM");
+  	if (flag == 24) flag = 0;
+  	//lcd.clear();
+    lcd.print("                ");
+  
+  //Time Based Greeting Logic
+  lcd.setCursor(0, 1);
+  if (h <= 12 && flag < 12)
+  {
+    lcd.print("GOOD MORNING  ;)");
+  }
+  if (h == 12 || h == 1 || h == 2 || h == 3 && flag >= 12)
+  {
+    lcd.print("GOOD AFTERNOON:)");
+  }
+  if (h == 4 || h == 5 || h == 6 || h == 7 || h == 8 && flag > 12)
+  {
+    lcd.print("GOOD EVENING  :)");
+  }
+  if (h >= 9 && flag > 12)
+  {
+    lcd.print("GOOD NIGHT  :)");
+  }
+    }
+    
+    if(mode == 1)
+    {
+      lcd.setCursor(0,0);
+      lcd.print("    Testing...  ");
+      lcd.setCursor(0,1);
+      lcd.print("    Testing...  ");
+    }
+    
+    
+  if(mode == 2)
+  {
+     // Read Red value
+	redPW = getRedPW();
+	// Map to value from 0-255
+	redValue = map(redPW, 40,179,255,0);
+	// Delay to stabilize sensor
+	delay(200);
+
+	// Read Green value
+	greenPW = getGreenPW();
+	// Map to value from 0-255
+	greenValue = map(greenPW, 52,118,255,0);
+	// Delay to stabilize sensor
+	delay(200);
+
+	// Read Blue value
+	bluePW = getBluePW();
+	// Map to value from 0-255
+	blueValue = map(bluePW, 53,206,255,0);
+	// Delay to stabilize sensor
+	delay(200);
+	
+	if(greenPW >= 200) {
+	  
+	  lcd.setCursor(0,0);
+	  lcd.print("GREEN         ");
+	}
+	
+	  
+	else if(bluePW >= 200){
+	   
+	   lcd.setCursor(0,0);
+	   lcd.print("BLUE          ");
+	 }
+	 
+	 
+	 else if(redPW >= 150){
+	   
+	   lcd.setCursor(0,0);
+	   lcd.print("RED           ");
+	   
+	 }
+	 
+	 else{
+	   
+	  lcd.setCursor(0,0);
+	  lcd.print("NO COLOUR  ");
+	  lcd.setCursor(0,1);
+	  lcd.print("DETECTED        ");
+	  
+	 }
+
+	// Print output to Serial Monitor
+	Serial.print("Red = ");
+	Serial.print(redValue);
+	Serial.print(" - Green = ");
+	Serial.print(greenValue);
+	Serial.print(" - Blue = ");
+	Serial.println(blueValue);
+  }
+ 
+  if (btn1 == on && btn2 == off)
+  {
+    h = h + 1;
+    flag = flag + 1;
+    if (flag < 12) lcd.print(" AM");
+    if (flag == 12) lcd.print(" PM");
+    if (flag > 12) lcd.print(" PM");
+    if (flag == 24) flag = 0;
+    if (h == 13) h = 1;
+    delay(100);
+  }
+  if (btn2 == on && btn1 == off)
+  {
+    s = 0;
+    m = m + 1;
+    delay(100);
+  }
+  
+  if (btn1 == on && btn2 == on)
+  {
+    mode = mode + 1;
+    delay(100);
+    
+    if(mode == 3)
+    {
+      mode = 0;
+    }
+    Serial.println(mode);
+    
+    tone(spkr, 500);
+  }
+  
+  else
+  {
+    noTone(spkr);
+  }
+} 
