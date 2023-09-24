@@ -1,0 +1,109 @@
+/*
+~Using a Trim Pot as a mode selector~
+1) Run simulation
+2) Open the serial monitor
+3) Turn the position of the trim pot
+*/
+
+int potPin = A1;	//Physical pin for Trim Pot
+int ldrPin = A0;
+int potVal;			//Variable to store Trim Pot position (0-1023)
+int ldrVal;
+int mappedVal;		//Variable for remapping of Pot position (0-3)
+
+int red1 = 11;		//Physical pin for red led
+int green1 = 10;		//Physical pin for blue led
+int blue1 = 9;		//Physical pin for green led
+
+int red2 = 7;		//Physical pin for red led
+int green2 = 4;		//Physical pin for blue led
+int blue2 = 2;		//Physical pin for green led
+
+int red3 = 3;		//Physical pin for red led
+int green3 = 5;		//Physical pin for blue led
+int blue3 = 6;		//Physical pin for green led
+
+void setup()
+{
+  pinMode (potPin, INPUT);	//Set potPin as an Input
+  pinMode (ldrPin, INPUT);	//Set ldrPin as an Input
+  pinMode (red1, OUTPUT);	//Set red led as an Output
+  pinMode (blue1, OUTPUT);	//Set green led as an Output
+  pinMode (green1, OUTPUT);	//Set blue led as an Output
+} 
+  void loop()
+{
+  potVal = analogRead(potPin);				//Record Pot position to potVal variable
+  ldrVal = analogRead(ldrPin);
+  mappedVal = map(potVal, 0, 1023, 0, 5);	//remap for smaller range (ex 0 = 0, 1023 = 3)
+  Serial.print("Pot value: ");				//Print out the remapped Value
+  Serial.println(mappedVal);				//Print out the remapped Value
+  Serial.print("LDR value: ");				//Print out the remapped Value
+  Serial.println(ldrVal);				//Print out the remapped Value
+} 
+  {
+  if (mappedVal == 0)
+  
+    digitalWrite (red1, LOW);	//If value = 0, LEDs stays off
+    digitalWrite (blue1, LOW);
+    digitalWrite (green1, LOW);
+    digitalWrite (red2, LOW);
+    digitalWrite (blue2, LOW);
+    digitalWrite (green2, LOW);
+    digitalWrite (red3, LOW);
+    digitalWrite (blue3, LOW);
+    digitalWrite (green3, LOW);
+  }
+  
+  else if (mappedVal == 1)
+  {
+    digitalWrite (red1, HIGH);
+    digitalWrite (blue1, HIGH);
+    digitalWrite (green1, HIGH);
+    digitalWrite (red2, HIGH);
+    digitalWrite (blue2, HIGH);
+    digitalWrite (green2, HIGH);
+    delay(1000);
+    digitalWrite (red1, HIGH);
+    digitalWrite (blue1, HIGH);
+    digitalWrite (green1, LOW);
+    delay(1000);
+    digitalWrite (red1, LOW);
+    digitalWrite (blue1, HIGH);
+    digitalWrite (green1, HIGH);
+    delay(1000);
+    digitalWrite (red1, HIGH);
+    digitalWrite (blue1, LOW);
+    digitalWrite (green1, HIGH);
+    delay(1000);
+  }
+
+   else if (mappedVal == 2)
+  {
+    digitalWrite (red1, LOW);
+    digitalWrite (blue1, HIGH);
+    digitalWrite (green1, LOW);
+    delay(1500);
+    digitalWrite (red1, LOW);
+    digitalWrite (blue1, HIGH);
+    digitalWrite (green1, HIGH);
+    delay(1500);
+    digitalWrite (red1, HIGH);
+    digitalWrite (blue1, HIGH);
+    digitalWrite (green1, HIGH);
+    delay(1500);
+  }
+  
+  else if (mappedVal == 3)
+  {
+    digitalWrite (red1, LOW);	
+    digitalWrite (blue1, LOW);
+    digitalWrite (green1, HIGH);
+    delay(1000);
+    digitalWrite (red1, LOW);
+    digitalWrite (blue1, HIGH);
+    digitalWrite (green1, HIGH );
+    delay(1000); 
+  }
+}
+ 
